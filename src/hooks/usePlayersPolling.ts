@@ -31,7 +31,7 @@ export function usePlayersPolling(roomId: string) {
     const poll = async () => {
       if (isActiveRef.current) {
         await fetchPlayers();
-        pollingTimeoutRef.current = setTimeout(poll, 2000);
+        pollingTimeoutRef.current = setTimeout(poll, 1500);
       }
     };
 

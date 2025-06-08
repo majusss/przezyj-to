@@ -7,7 +7,7 @@ import PlayerForm from "./player-form";
 import RoomsList from "./rooms-list";
 import CreateRoomForm from "./create-room-form";
 import { Gamepad2 } from "lucide-react";
-import { movePlayerToRoom } from "@/actions/rooms";
+import { leaveRoom, movePlayerToRoom } from "@/actions/rooms";
 
 interface HomeProps {
   rooms: Room[];
@@ -20,10 +20,8 @@ export default function Home({
 }: HomeProps) {
   const [player, setPlayer] = useState<Player | null>(initialPlayer);
   const { rooms } = useRoomsPolling(initialRooms);
-  // Debug log
-  console.log(
-    `🔍 Home render - ${rooms.length} rooms, Player: ${player?.name || "None"}`
-  );
+
+  const selectedRoom = rooms.find((room) => room.id === player?.room_id);
 
   const handlePlayerCreated = (newPlayer: Player) => {
     setPlayer(newPlayer);
@@ -34,21 +32,24 @@ export default function Home({
     await movePlayerToRoom(player?.id, roomId);
   };
 
+  const handleLeaveRoom = async () => {
+    if (!player) return;
+    await leaveRoom(player.id);
+  };
+
+  const handleStartGame = async (roomId: string) => {};
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          {" "}
-          {/* Header */}
           <div className="text-center mb-12">
-            {" "}
             <div className="flex items-center justify-center gap-3 mb-4">
               <Gamepad2 className="w-12 h-12 text-indigo-600" />
               <h1 className="text-5xl font-bold text-gray-800">Przeżyj to!</h1>
             </div>
             <p className="text-xl text-gray-600">Czy uda ci się przeżyć?</p>
           </div>
-          {/* Main Content */}
           <div className="space-y-8">
             {player ? (
               <div className="space-y-8">
@@ -70,6 +71,8 @@ export default function Home({
                     rooms={rooms}
                     currentPlayer={player}
                     onJoinRoom={handleJoinRoom}
+                    onLeaveRoom={handleLeaveRoom}
+                    onStartGame={handleStartGame}
                   />
                 </div>
               </div>

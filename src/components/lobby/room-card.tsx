@@ -3,23 +3,29 @@
 import { Room, Player } from "@/types/supabase";
 import { usePlayersPolling } from "@/hooks/usePlayersPolling";
 import { Button } from "../ui/button";
-import { Users, Crown } from "lucide-react";
+import { Users, Crown, X } from "lucide-react";
 
 interface RoomCardProps {
   room: Room;
   currentPlayer?: Player;
   onJoinRoom?: (roomId: string) => void;
+  onLeaveRoom?: (roomId: string) => void;
+  onStartGame?: (roomId: string) => void;
 }
 
-const RoomCard = ({ room, currentPlayer, onJoinRoom }: RoomCardProps) => {
+const RoomCard = ({
+  room,
+  currentPlayer,
+  onJoinRoom,
+  onLeaveRoom,
+  onStartGame,
+}: RoomCardProps) => {
   const { players } = usePlayersPolling(room.id);
-  // Debug log to track re-renders
-  console.log(
-    `🔍 RoomCard render - Room: ${room.name} (${room.id}), Players: ${players.length}`
-  );
 
   const isCurrentPlayerInRoom =
     currentPlayer && players.some((p) => p.id === currentPlayer.id);
+  const isCurrentPlayerMaster =
+    currentPlayer && room.master_id === currentPlayer.id;
   return (
     <div className="border-2 border-gray-200 rounded-lg p-4 space-y-3 hover:border-gray-300 transition-colors w-full max-w-2xl">
       <div className="flex items-center justify-between">
@@ -54,6 +60,15 @@ const RoomCard = ({ room, currentPlayer, onJoinRoom }: RoomCardProps) => {
                 {player.id === room.master_id && (
                   <Crown className="w-3 h-3 text-yellow-500" />
                 )}
+
+                {onLeaveRoom && player.id === currentPlayer?.id && (
+                  <div
+                    className="cursor-pointer p-1"
+                    onClick={() => onLeaveRoom(room.id)}
+                  >
+                    <X className="w-3 h-3 text-red-500" />
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -69,6 +84,15 @@ const RoomCard = ({ room, currentPlayer, onJoinRoom }: RoomCardProps) => {
           Dołącz do pokoju
         </Button>
       )}
+
+      {onStartGame &&
+        isCurrentPlayerMaster &&
+        room.state === "waiting" &&
+        players.length > 1 && (
+          <Button className="w-full" onClick={() => onStartGame(room.id)}>
+            Rozpocznij gre
+          </Button>
+        )}
     </div>
   );
 };

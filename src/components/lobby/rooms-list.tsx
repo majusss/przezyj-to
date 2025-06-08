@@ -7,19 +7,17 @@ interface RoomsListProps {
   rooms: Room[];
   currentPlayer?: Player;
   onJoinRoom?: (roomId: string) => void;
+  onLeaveRoom?: (roomId: string) => void;
+  onStartGame?: (roomId: string) => void;
 }
 
 export default function RoomsList({
   rooms,
   currentPlayer,
   onJoinRoom,
+  onLeaveRoom,
+  onStartGame,
 }: RoomsListProps) {
-  // Debug log
-  console.log(
-    `🔍 RoomsList render - ${rooms.length} rooms:`,
-    rooms.map((r) => ({ id: r.id, name: r.name }))
-  );
-
   if (rooms.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -39,6 +37,8 @@ export default function RoomsList({
             room={room}
             currentPlayer={currentPlayer}
             onJoinRoom={onJoinRoom}
+            onLeaveRoom={onLeaveRoom}
+            onStartGame={onStartGame}
           />
         ))}
       </div>

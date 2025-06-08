@@ -3,6 +3,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { Player } from "@/types/supabase";
 import { revalidatePath } from "next/cache";
+import { leaveRoom } from "./rooms";
 
 export async function createPlayer(name: string): Promise<Player | null> {
   const supabase = await createServerSupabaseClient();
@@ -18,7 +19,6 @@ export async function createPlayer(name: string): Promise<Player | null> {
     return null;
   }
   if (data) {
-    revalidatePath("/");
     return data as Player;
   }
   const { data: newData, error: newError } = await supabase
@@ -30,7 +30,6 @@ export async function createPlayer(name: string): Promise<Player | null> {
     console.error("Error creating player with existing ID:", error);
     return null;
   }
-  revalidatePath("/");
   return newData as Player;
 }
 
@@ -65,50 +64,7 @@ export async function deletePlayer(): Promise<boolean> {
     return false;
   }
 
-  // need to change master to oldest player in room
-  const { data: masterData, error: masterError } = await supabase
-    .from("room")
-    .select("id")
-    .eq("master_id", playerId)
-    .maybeSingle();
-
-  if (masterError) {
-    console.error("Error fetching master room data:", masterError);
-  }
-
-  if (masterData) {
-    const { data: playersInRoom, error: playersError } = await supabase
-      .from("players")
-      .select("id")
-      .eq("room_id", masterData.id);
-
-    if (playersError) {
-      console.error("Error fetching players in room:", playersError);
-    }
-
-    if (playersInRoom && playersInRoom.length > 0) {
-      const newMasterId = playersInRoom[playersInRoom.length - 1].id;
-
-      const { error: updateError } = await supabase
-        .from("rooms")
-        .update({ master_id: newMasterId })
-        .eq("id", masterData.id);
-
-      if (updateError) {
-        console.error("Error updating room master:", updateError);
-      }
-    } else {
-      // delete empty room when master is deleted
-      const { error: deleteRoomError } = await supabase
-        .from("rooms")
-        .delete()
-        .eq("id", masterData.id);
-
-      if (deleteRoomError) {
-        console.error("Error deleting empty room:", deleteRoomError);
-      }
-    }
-  }
+  await leaveRoom(playerId);
 
   const { error: dbError } = await supabase
     .from("players")
