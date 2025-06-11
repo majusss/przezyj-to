@@ -75,7 +75,7 @@ const RoomCard = ({
         </div>
       )}
 
-      {onJoinRoom && !isCurrentPlayerInRoom && room.state === "waiting" && (
+      {onJoinRoom && !isCurrentPlayerInRoom && room.state === "lobby" && (
         <Button
           onClick={() => onJoinRoom(room.id)}
           className="w-full"
@@ -87,7 +87,7 @@ const RoomCard = ({
 
       {onStartGame &&
         isCurrentPlayerMaster &&
-        room.state === "waiting" &&
+        room.state === "lobby" &&
         players.length > 1 && (
           <Button className="w-full" onClick={() => onStartGame(room.id)}>
             Rozpocznij gre

@@ -5,6 +5,7 @@ export interface Room {
   master_id: string;
   state: string;
   scenario: string;
+  scenario_author_id: string | null;
 }
 
 export interface Player {

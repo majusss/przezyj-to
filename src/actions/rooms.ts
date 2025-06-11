@@ -22,7 +22,7 @@ export async function createRoom(
 
   const { data, error } = await supabase
     .from("rooms")
-    .insert({ name, master_id, state: "waiting", scenario: "default" })
+    .insert({ name, master_id, state: "lobby" })
     .select()
     .single();
 
@@ -180,4 +180,66 @@ export async function getRooms(): Promise<Room[] | null> {
   }
 
   return data as Room[];
+}
+
+export async function startGame(roomId: string): Promise<boolean> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: room, error: roomError } = await supabase
+    .from("rooms")
+    .select("id, master_id")
+    .eq("id", roomId)
+    .single();
+
+  if (roomError) {
+    console.error("Error fetching room:", roomError);
+    return false;
+  }
+
+  if (!room) {
+    console.error("No room found with ID:", roomId);
+    return false;
+  }
+
+  const { data, error } = await supabase
+    .from("rooms")
+    .update({ state: "scenario", scenario_author_id: room.master_id })
+    .eq("id", roomId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error starting game:", error);
+    return false;
+  }
+
+  if (!data) {
+    console.error("No room found with ID:", roomId);
+    return false;
+  }
+
+  return true;
+}
+
+export async function startScenario(scenario: string, roomId: string) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("rooms")
+    .update({ scenario, state: "answering" })
+    .eq("id", roomId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error starting scenario:", error);
+    return false;
+  }
+
+  if (!data) {
+    console.error("No room found with ID:", roomId);
+    return false;
+  }
+
+  return true;
 }
